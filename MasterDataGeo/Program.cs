@@ -2,11 +2,10 @@
 {
     internal class Program
     {
-
         // List of the database contents
         static List<GeographyElement> geographyElementsList = new();
 
-        // Lists of all the initial elements - without filter
+        // Lists of all the initial elements - without filter. To provide to the frontend in the initial load
         static List<string?> allTheZones = new();
         static List<string?> allTheMarkets = new();
         static List<string?> allTheCountries = new();
@@ -41,6 +40,9 @@
 
             var elementsUpToCompany = geographyElementsList.Select(x => (x.Zone, x.Market, x.Country, x.DisplayCompany)).Distinct().ToList();
             elementsUpToCompany.ForEach(x => LookupCompanySelection[x.DisplayCompany] = (x.Zone, x.Market, x.Country));
+
+            // Warning - the number of DISTINCT elements in the selection is greater than the number of KEYS in the lookup, that means we have the same key applying to 
+            // different previous elements - it is very possible that masterdata is not well formed.
         }
 
         static void LoadContentsFromDB()
@@ -51,7 +53,9 @@
             lines.ForEach(line => geographyElementsList.Add(new GeographyElement(line)));
         }
 
-        static (string, string, string, string) GetReverseFromPlant(string plantName)
+        // Reverse selection endpoints (We select something and then we have to resolve the previous elements)
+
+        static (string?, string?, string?, string?) GetReverseFromPlant(string plantName)
         {
             var element = geographyElementsList.Where(x => x.DisplayPlant == plantName).FirstOrDefault();
             return (element.Zone, element.Market, element.Country, element.DisplayCompany);
@@ -66,7 +70,19 @@
         static string GetReverseFromMarket(string marketName)
             => LookupMarketSelection[marketName];
 
+        
+        
+        // Cascade selection endpoints (We select something and we have to resolve the filters for the following elements)
+        static List<string> FilterMarkets(string selectedZone)
+            => geographyElementsList.Where(x => x.Zone == selectedZone).Select(x => x.Market).ToList();
 
+        static List<string> FilterCountries(string selectedMarket)
+           => geographyElementsList.Where(x => x.Market == selectedMarket).Select(x => x.Country).ToList();
 
+        static List<string> FilterCompanies(string selectedCountry)
+           => geographyElementsList.Where(x => x.Country == selectedCountry).Select(x => x.DisplayCompany).ToList();
+
+        static List<string> FilterPlants(string selectedCompany)
+           => geographyElementsList.Where(x => x.DisplayCompany == selectedCompany).Select(x => x.DisplayPlant).ToList();
     }
 }
