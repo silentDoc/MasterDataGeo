@@ -26,5 +26,17 @@
             PlantCode = plantCode;
             PlantName = plantName;
         }
+
+        public GeographyElement(string csvLine)
+        {
+            var elements = csvLine.Split(";", StringSplitOptions.TrimEntries);
+            Zone = elements[0];
+            Market = elements[1];
+            Country = elements[2];
+            CompanyCode = elements[3];
+            CompanyName = elements[4];
+            PlantCode = elements[5];
+            PlantName = elements[6];
+        }
     }
 }
